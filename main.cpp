@@ -278,7 +278,9 @@ private:
     Element<T>* _tail;
     int _size;
     int _capacity;
-    int _grow;
+    int _grow = 1;
+
+    
 
     void resize(int new_size)
     {
@@ -293,8 +295,14 @@ private:
         {
             while (_capacity > new_size)
             {
-                _capacity -= _grow;
+                _capacity--;
             }
+        }
+    }
+
+    void to_resize(int size) {
+        if (size > _capacity) {
+            resize(size);
         }
     }
 
@@ -312,7 +320,9 @@ private:
             temp->prev = _tail;
             _tail = temp;
         }
+		to_resize(_size + 1);
         _size++;
+        
     }
 
     void push_front(T value)
@@ -330,6 +340,7 @@ private:
             _head = temp;
         }
         _size++;
+        to_resize(_size + 1);
     }
 
     void pop_back()
@@ -386,25 +397,34 @@ public:
 
     int GetSize() const
     {
-        return _size;
+        return _capacity;
     }
+	int GetCount() const
+	{
+		return _size;
+	}
 
     void SetSize(int size, int grow = 1)
     {
         _grow = grow;
-        resize(size);
-        while (_size > size)
-        {
-            pop_back();
-        }
-        while (_size < size)
-        {
-            if (_size % _grow == 0)
+        if (_size > size) {
+            for (_size; _size > size; _size++)
             {
-                resize(_size + _grow);
+                _size--;
+                pop_back();
             }
-            push_back(T());
         }
+
+        if (_capacity > size) {
+			resize(size);
+        }
+
+		else if (size > _capacity)
+		{
+            resize(size);
+        }
+
+        
     }
 
     int GetUpperBound() const
@@ -412,15 +432,19 @@ public:
         return _size - 1;
     }
 
+
     bool IsEmpty() const
     {
         return _size == 0;
     }
 
-    void FreeExtra()
-    {
-        resize(_size);
-    }
+	void FreeExtra()
+	{
+		// Resize the array to the size that have data
+		int real_size = GetUpperBound() + 1;//+1 because the index starts from 0
+		resize(real_size);
+        
+	}
 
     void RemoveAll()
     {
@@ -479,10 +503,6 @@ public:
 
     void Add(T value)
     {
-        if (_size >= _capacity)
-        {
-            resize(_size + 1);
-        }
         push_back(value);
     }
 
@@ -551,7 +571,9 @@ public:
             new_elem->prev = temp;
             temp->next->prev = new_elem;
             temp->next = new_elem;
+            to_resize(_size + 1);
             _size++;
+            
         }
     }
 
@@ -586,6 +608,15 @@ public:
 
 };
 
+template <typename T>
+void print_array(Array<T>& arr)
+{
+	for (int i = 0; i < arr.GetCount(); ++i)
+	{
+		cout << arr[i] << " ";
+	}
+	cout << endl;
+}
 
 int main()
 {
@@ -595,11 +626,7 @@ int main()
     arr.Add(3);
     cout << "Array size: " << arr.GetSize() << endl;
     cout << "Array elements: ";
-    for (int i = 0; i < arr.GetSize(); ++i)
-    {
-        cout << arr[i] << " ";
-    }
-	cout << endl;
+	print_array(arr);
     
     arr.RemoveAt(2);
 
@@ -607,23 +634,26 @@ int main()
     arr2 = arr;
     arr2.Append(arr);
     cout << "Array 2 old elements: ";
-    for (int i = 0; i < arr2.GetSize(); ++i)
-    {
-        cout << arr2[i] << " ";
-    }
+	print_array(arr2);
 	cout << endl;
 
-    arr2.SetSize(5, 2);
-    arr2.InsertAt(1, 4);
+    arr2.SetSize(2, 5);
+    cout << "Array 2 size: " << arr2.GetSize() << endl;
+    cout << "Array 2 count: " << arr2.GetCount() << endl;
+    cout << "Array 2 elements (after set_size): ";
+    print_array(arr2);
+    cout << endl;
+
+    arr2.InsertAt(1, 8);
 	arr2.FreeExtra();
-    
-    cout << "Array 2 memory: " << arr2.GetData() << endl;
+
+    arr2.InsertAt(0, 9);
+
+    cout << "Array 2 memory adress: " << arr2.GetData() << endl;
     cout << "Array 2 size: " << arr2.GetSize() << endl;
     cout << "Array 2 elements: ";
-    for (int i = 0; i < arr2.GetSize(); ++i)
-    {
-        cout << arr2[i] << " ";
-    }
+	print_array(arr2);
+
     cout << endl;
     return 0;
 }
